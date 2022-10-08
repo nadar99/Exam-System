@@ -1,0 +1,51 @@
+version: '3.8'
+services:
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka_server
+    ports:
+      - "8761:8761"
+
+  cloud-gateway:
+    build: ./cloud-gateway-service
+    container_name: cloud_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+
+  mongo:
+    image: mongo:5.0.11
+    container_name: mongo
+    command: mongod
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=1234
+
+  question-bank:
+    build: ./question-bank-service
+    container_name: question_bank_c
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+    environment:
+      - SPRING_DATA_MONGODB_USERNAME=root
+      - SPRING_DATA_MONGODB_PASSWORD=1234
+      - SPRING_DATA_MONGODB_DATABASE=question-bank
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  lookup:
+    build: ./lookup-service
+    container_name: lookup_c
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mongo
+    environment:
+      - SPRING_DATA_MONGODB_USERNAME=root
+      - SPRING_DATA_MONGODB_PASSWORD=1234
+      - SPRING_DATA_MONGODB_DATABASE=lookup
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
